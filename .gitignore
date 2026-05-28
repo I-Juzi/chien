@@ -1,4 +1,4 @@
-HELP.md
+README.md
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Node ###
+node_modules/
+chien-ui/dist/
+chien-ui/node_modules/
+
+### OS ###
+.DS_Store
+Thumbs.db
