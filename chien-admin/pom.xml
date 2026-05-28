@@ -83,6 +83,19 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
+        <!-- Spring Boot AOP (操作日志、接口限流切面) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Spring Data Redis -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

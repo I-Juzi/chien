@@ -15,8 +15,8 @@
         <el-table-column prop="description" label="描述" />
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
-            <el-tag :type="row.status === 0 ? 'success' : 'danger'">
-              {{ row.status === 0 ? '正常' : '停用' }}
+            <el-tag :type="row.status === 1 ? 'success' : 'danger'">
+              {{ row.status === 1 ? '正常' : '停用' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -45,8 +45,8 @@
         </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">
-            <el-radio :value="0">正常</el-radio>
-            <el-radio :value="1">停用</el-radio>
+            <el-radio :value="1">正常</el-radio>
+            <el-radio :value="0">停用</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
