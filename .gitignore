@@ -14,10 +14,13 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
+
+### Kilocode ###
+.kilocode/
 
 ### NetBeans ###
 /nbproject/private/
@@ -27,16 +30,4 @@ target/
 /.nb-gradle/
 build/
 !**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
-.vscode/
-
-### Node ###
-node_modules/
-chien-ui/dist/
-chien-ui/node_modules/
-
-### OS ###
-.DS_Store
-Thumbs.db
+!**/src/test/**/b
