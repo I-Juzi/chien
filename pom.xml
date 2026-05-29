@@ -16,6 +16,9 @@
     <description>chien</description>
 
     <modules>
+        <module>chien-common</module>
+        <module>chien-system</module>
+        <module>chien-log</module>
         <module>chien-admin</module>
     </modules>
 

@@ -60,6 +60,8 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()
                         // Swagger / SpringDoc 放行
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/webjars/**").permitAll()
+                        // 文件预览/下载放行
+                        .requestMatchers("/file/view/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 // 异常处理
