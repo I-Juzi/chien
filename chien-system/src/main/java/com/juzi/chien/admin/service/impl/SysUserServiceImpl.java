@@ -91,4 +91,22 @@ public class SysUserServiceImpl implements SysUserService {
             }
         }
     }
+
+    @Override
+    public boolean changePassword(Long userId, String oldPassword, String newPassword) {
+        SysUser user = userMapper.selectById(userId);
+        if (user == null) {
+            return false;
+        }
+        // 验证旧密码
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            return false;
+        }
+        // 更新新密码
+        SysUser update = new SysUser();
+        update.setId(userId);
+        update.setPassword(passwordEncoder.encode(newPassword));
+        userMapper.updateById(update);
+        return true;
+    }
 }

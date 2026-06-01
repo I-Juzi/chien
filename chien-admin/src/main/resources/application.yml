@@ -50,7 +50,8 @@ management:
 # JWT 配置
 jwt:
   secret: chien-admin-secret-key-must-be-at-least-256-bits-long!!
-  expiration: 86400000  # 24小时（毫秒）
+  expiration: 7200000        # 访问令牌有效期（2小时）
+  refresh-expiration: 604800000  # 刷新令牌有效期（7天）
 
 # 日志配置
 logging:
@@ -68,8 +69,8 @@ springdoc:
 
 # 文件上传自定义配置
 upload:
-  # 上传文件存储路径
-  path: ./uploads
+  # 上传文件存储路径（基于项目根目录）
+  path: ${user.dir}/uploads
   # 允许的文件后缀（逗号分隔，不带点）
   allowed-extensions: jpg,jpeg,png,gif,bmp,webp,ico,svg,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar,7z,mp3,mp4,avi,mov
   # 单个文件最大大小（MB）

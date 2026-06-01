@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { loginApi, getUserInfoApi, logoutApi } from '@/api/auth'
-import { getToken, setToken, removeToken } from '@/utils/auth'
+import { getToken, setToken, removeToken, setRefreshToken } from '@/utils/auth'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref(getToken() || '')
@@ -16,6 +16,9 @@ export const useUserStore = defineStore('user', () => {
     userId.value = res.data.userId
     username.value = res.data.username
     setToken(res.data.token)
+    if (res.data.refreshToken) {
+      setRefreshToken(res.data.refreshToken)
+    }
     return res
   }
 

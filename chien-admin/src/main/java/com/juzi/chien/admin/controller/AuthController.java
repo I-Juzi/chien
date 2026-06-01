@@ -2,6 +2,9 @@ package com.juzi.chien.admin.controller;
 
 import com.juzi.chien.admin.common.RateLimit;
 import com.juzi.chien.admin.common.Result;
+import com.juzi.chien.admin.common.BusinessException;
+import com.juzi.chien.admin.common.ErrorCode;
+import com.juzi.chien.admin.domain.entity.SysUser;
 import com.juzi.chien.admin.domain.vo.LoginVO;
 import com.juzi.chien.admin.domain.vo.MenuTreeVO;
 import com.juzi.chien.admin.security.JwtUtils;
@@ -9,6 +12,7 @@ import com.juzi.chien.admin.security.LoginUser;
 import com.juzi.chien.admin.service.OnlineUserService;
 import com.juzi.chien.admin.service.SysLoginLogService;
 import com.juzi.chien.admin.service.SysMenuService;
+import com.juzi.chien.admin.service.SysUserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +38,7 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final SysMenuService menuService;
+    private final SysUserService userService;
     private final OnlineUserService onlineUserService;
     private final SysLoginLogService loginLogService;
 
@@ -58,6 +63,7 @@ public class AuthController {
             LoginUser loginUser = (LoginUser) authentication.getPrincipal();
 
             String token = jwtUtils.generateToken(loginUser.getUserId(), loginUser.getUsername());
+            String refreshToken = jwtUtils.generateRefreshToken(loginUser.getUserId(), loginUser.getUsername());
 
             // 存储到 Redis（在线用户管理）
             onlineUserService.login(loginUser.getUserId(), loginUser.getUsername(), token, ip);
@@ -67,6 +73,7 @@ public class AuthController {
 
             Map<String, Object> data = new HashMap<>();
             data.put("token", token);
+            data.put("refreshToken", refreshToken);
             data.put("userId", loginUser.getUserId());
             data.put("username", loginUser.getUsername());
 
@@ -99,6 +106,85 @@ public class AuthController {
         data.put("menus", menuTree);
 
         return Result.success(data);
+    }
+
+    /**
+     * 刷新 Token
+     */
+    @Operation(summary = "刷新访问令牌")
+    @PostMapping("/refresh")
+    public Result<Map<String, Object>> refreshToken(@RequestBody Map<String, String> params) {
+        String refreshToken = params.get("refreshToken");
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return Result.error(401, "刷新令牌不能为空");
+        }
+
+        try {
+            // 验证刷新令牌是否过期
+            if (jwtUtils.isTokenExpired(refreshToken)) {
+                return Result.error(401, "刷新令牌已过期，请重新登录");
+            }
+
+            Long userId = jwtUtils.getUserIdFromToken(refreshToken);
+            String username = jwtUtils.getUsernameFromToken(refreshToken);
+
+            // 生成新的访问令牌
+            String newToken = jwtUtils.generateToken(userId, username);
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("token", newToken);
+            return Result.success(data);
+        } catch (Exception e) {
+            return Result.error(401, "刷新令牌无效，请重新登录");
+        }
+    }
+
+    /**
+     * 获取当前用户个人信息
+     */
+    @Operation(summary = "获取个人信息")
+    @GetMapping("/profile")
+    public Result<SysUser> getProfile() {
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        SysUser user = userService.selectUserById(loginUser.getUserId());
+        user.setPassword(null); // 不返回密码
+        return Result.success(user);
+    }
+
+    /**
+     * 修改个人信息
+     */
+    @Operation(summary = "修改个人信息")
+    @PutMapping("/profile")
+    public Result<Void> updateProfile(@RequestBody SysUser user) {
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        SysUser update = new SysUser();
+        update.setId(loginUser.getUserId());
+        update.setNickname(user.getNickname());
+        update.setEmail(user.getEmail());
+        update.setPhone(user.getPhone());
+        update.setAvatar(user.getAvatar());
+        userService.updateUser(update);
+        return Result.success();
+    }
+
+    /**
+     * 修改密码
+     */
+    @Operation(summary = "修改密码")
+    @PutMapping("/password")
+    public Result<Void> changePassword(@RequestBody Map<String, String> params) {
+        String oldPassword = params.get("oldPassword");
+        String newPassword = params.get("newPassword");
+        if (oldPassword == null || newPassword == null || newPassword.isBlank()) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "旧密码和新密码不能为空");
+        }
+        LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        boolean success = userService.changePassword(loginUser.getUserId(), oldPassword, newPassword);
+        if (!success) {
+            throw new BusinessException(ErrorCode.USER_PASSWORD_ERROR, "旧密码错误");
+        }
+        return Result.success();
     }
 
     /**

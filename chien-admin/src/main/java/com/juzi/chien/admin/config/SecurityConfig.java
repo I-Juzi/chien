@@ -62,6 +62,8 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/webjars/**").permitAll()
                         // 文件预览/下载放行
                         .requestMatchers("/file/view/**").permitAll()
+                        // SSE 推送放行（token 在 URL 参数中手动验证）
+                        .requestMatchers("/sse/subscribe").permitAll()
                         .anyRequest().authenticated()
                 )
                 // 异常处理

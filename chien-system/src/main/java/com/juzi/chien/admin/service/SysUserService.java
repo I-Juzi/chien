@@ -48,4 +48,9 @@ public interface SysUserService {
      * 更新用户角色关联
      */
     void updateUserRoles(Long userId, List<Long> roleIds);
+
+    /**
+     * 修改密码（需验证旧密码）
+     */
+    boolean changePassword(Long userId, String oldPassword, String newPassword);
 }

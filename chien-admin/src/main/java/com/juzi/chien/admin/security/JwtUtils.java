@@ -20,26 +20,48 @@ public class JwtUtils {
     @Value("${jwt.secret:chien-admin-secret-key-must-be-at-least-256-bits-long!!}")
     private String secret;
 
-    @Value("${jwt.expiration:86400000}")
+    @Value("${jwt.expiration:7200000}")
     private Long expiration;
+
+    @Value("${jwt.refresh-expiration:604800000}")
+    private Long refreshExpiration;
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
-     * 生成 JWT Token
+     * 生成 JWT Token（访问令牌）
      */
     public String generateToken(Long userId, String username) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         claims.put("username", username);
+        claims.put("type", "access");
 
         return Jwts.builder()
                 .claims(claims)
                 .subject(username)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    /**
+     * 生成刷新令牌
+     */
+    public String generateRefreshToken(Long userId, String username) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+        claims.put("username", username);
+        claims.put("type", "refresh");
+
+        return Jwts.builder()
+                .claims(claims)
+                .subject(username)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + refreshExpiration))
                 .signWith(getSigningKey())
                 .compact();
     }

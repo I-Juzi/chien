@@ -1,4 +1,4 @@
-README.md
+HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
@@ -39,6 +39,9 @@ build/
 node_modules/
 chien-ui/dist/
 chien-ui/node_modules/
+
+### 上传文件 ###
+uploads/
 
 ### OS ###
 .DS_Store

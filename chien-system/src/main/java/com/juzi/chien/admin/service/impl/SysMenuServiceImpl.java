@@ -39,9 +39,9 @@ public class SysMenuServiceImpl implements SysMenuService {
     public List<MenuTreeVO> selectMenuTreeByUserId(Long userId) {
         List<SysMenu> menus = menuMapper.selectMenusByUserId(userId);
 
-        // 只保留目录和菜单（排除按钮），并且只显示 is_visible = 1 的
+        // 只保留目录和菜单（排除按钮），隐藏菜单也返回（前端通过 meta.hidden 控制侧边栏显示）
         List<SysMenu> visibleMenus = menus.stream()
-                .filter(menu -> !"F".equals(menu.getMenuType()) && menu.getIsVisible() == 1)
+                .filter(menu -> !"F".equals(menu.getMenuType()))
                 .collect(Collectors.toList());
 
         return buildMenuTree(visibleMenus, 0L);

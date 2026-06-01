@@ -23,3 +23,13 @@ export function uploadFiles(files) {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
 }
+
+// 文件列表
+export function listFileApi() {
+  return request({ url: '/file/list', method: 'get' })
+}
+
+// 删除文件
+export function deleteFileApi(id) {
+  return request({ url: '/file/' + id, method: 'delete' })
+}

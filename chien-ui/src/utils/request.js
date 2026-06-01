@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getToken, removeToken } from './auth'
+import { getToken, setToken, removeToken, getRefreshToken } from './auth'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
 
@@ -7,6 +7,10 @@ const service = axios.create({
   baseURL: '/admin',
   timeout: 15000,
 })
+
+// Token 刷新状态
+let isRefreshing = false
+let pendingRequests = []
 
 // 请求拦截器
 service.interceptors.request.use(
@@ -22,6 +26,22 @@ service.interceptors.request.use(
   }
 )
 
+// 刷新 Token
+async function doRefreshToken() {
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) return false
+  try {
+    const res = await axios.post('/admin/auth/refresh', { refreshToken })
+    if (res.data.code === 200) {
+      setToken(res.data.data.token)
+      return true
+    }
+  } catch (e) {
+    // ignore
+  }
+  return false
+}
+
 // 响应拦截器
 service.interceptors.response.use(
   (response) => {
@@ -36,19 +56,46 @@ service.interceptors.response.use(
     }
     return res
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config
+    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+      // 尝试刷新 Token
+      if (isRefreshing) {
+        // 已在刷新中，将请求加入队列
+        return new Promise((resolve) => {
+          pendingRequests.push(() => resolve(service(originalRequest)))
+        })
+      }
+
+      originalRequest._retry = true
+      isRefreshing = true
+
+      const success = await doRefreshToken()
+      isRefreshing = false
+
+      if (success) {
+        // 刷新成功，重试所有排队的请求
+        pendingRequests.forEach(cb => cb())
+        pendingRequests = []
+        // 重试当前请求
+        return service(originalRequest)
+      } else {
+        // 刷新失败，跳转登录
+        pendingRequests = []
+        removeToken()
+        ElMessage.error('登录已过期，请重新登录')
+        router.push('/login')
+      }
+    }
+
     if (error.response) {
       const status = error.response.status
       const data = error.response.data
-      if (status === 401) {
-        ElMessage.error(data?.msg || '未认证，请先登录')
-        removeToken()
-        router.push('/login')
-      } else if (status === 403) {
+      if (status === 403) {
         ElMessage.error(data?.msg || '无权限访问')
       } else if (status === 405) {
         ElMessage.error(data?.msg || '请求方法不支持')
-      } else {
+      } else if (status !== 401) {
         ElMessage.error(data?.msg || '服务器错误')
       }
     } else {
